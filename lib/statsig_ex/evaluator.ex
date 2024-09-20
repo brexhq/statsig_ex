@@ -1,6 +1,10 @@
 defmodule StatsigEx.Evaluator do
   @unsupported ["ip_based"]
 
+  @moduledoc """
+  It is rare, but there may be a case where you need to get an evaluation result directly
+  """
+
   defmodule Result do
     defstruct exposures: [],
               secondary_exposures: [],

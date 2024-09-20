@@ -1,10 +1,23 @@
 defmodule StatsigEx do
   use GenServer
+  require Logger
   alias StatsigEx.Utils
 
   # default intervals
   @flush_interval 60_000
   @reload_interval 60_000
+
+  @moduledoc """
+  `StatsigEx` is the module through which all interaction with flags and configs
+  should flow. At a high level, it works like this:
+
+  * at startup, a `GenServer` is created that stores the most recent flag and config
+    definitions.
+  * (either via `check_gate` or )
+  * every `@reload_interval` milliseconds, the server pulls any recent changes to
+    flag or config definitions and updates its copy.
+  * every `@flush_interval` milliseconds, the server pushes exposure logs to statsig.
+  """
 
   def start_link(opts \\ []) do
     opts =
@@ -42,6 +55,9 @@ defmodule StatsigEx do
     # end
   end
 
+  @doc """
+  For a user, check a gate.
+  """
   def check_gate(user, gate, server \\ __MODULE__)
   def check_gate(nil, _gate, _server), do: {:error, :no_user}
 
@@ -114,6 +130,12 @@ defmodule StatsigEx do
     remaining = flush_events(key, events)
     Process.send_after(self(), :flush, i)
     {:noreply, Map.put(state, :events, remaining)}
+  end
+
+  # might want to log these messages
+  def handle_info(msg, state) do
+    Logger.info("unhandled message: #{inspect(msg)}")
+    {:noreply, state}
   end
 
   def terminate(_reason, %{api_key: key, events: events}),
