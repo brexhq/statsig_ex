@@ -117,6 +117,9 @@ defmodule StatsigEx do
   def handle_call({:log, event}, _from, state),
     do: {:reply, :ok, Map.put(state, :events, [event | state.events])}
 
+  def handle_info({:log, event}, state),
+    do: {:noreply, Map.put(state, :events, [event | state.events])}
+
   def handle_info(
         :reload,
         %{api_key: key, last_sync: time, prefix: server, reload_interval: i} = state
@@ -175,7 +178,7 @@ defmodule StatsigEx do
       base_event(user, secondary, :config)
       |> Map.put("metadata", primary)
 
-    GenServer.call(server, {:log, event})
+    GenServer.cast(server, {:log, event})
   end
 
   defp log_exposures(server, user, [primary | secondary], type) do
@@ -183,7 +186,7 @@ defmodule StatsigEx do
       base_event(user, secondary, type)
       |> Map.put("metadata", primary)
 
-    GenServer.call(server, {:log, event})
+    GenServer.cast(server, {:log, event})
   end
 
   defp base_event(user, secondary, type) do
