@@ -117,7 +117,7 @@ defmodule StatsigEx do
   def handle_call({:log, event}, _from, state),
     do: {:reply, :ok, Map.put(state, :events, [event | state.events])}
 
-  def handle_info({:log, event}, state),
+  def handle_cast({:log, event}, state),
     do: {:noreply, Map.put(state, :events, [event | state.events])}
 
   def handle_info(
