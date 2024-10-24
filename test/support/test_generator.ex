@@ -36,6 +36,8 @@ defmodule StatsigEx.TestGenerator do
 
               case unquote(type) do
                 :gate ->
+                  # maybe give us some time to actually spit out logs?
+                  StatsigEx.check_gate(unquote(Macro.escape(user)), unquote(name), :test)
                   assert unquote(Macro.escape(expected)) == result.result
 
                 _ ->
