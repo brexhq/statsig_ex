@@ -41,11 +41,15 @@ defmodule StatsigEx do
       api_key: get_api_key(Keyword.fetch!(opts, :api_key)),
       last_sync: 0,
       events: [],
-      tier: Keyword.get(opts, :tier, Application.get_env(:statsig_ex, :env_tier, nil)),
       prefix: server,
       flush_interval: Keyword.get(opts, :flush_interval, @flush_interval),
       reload_interval: Keyword.get(opts, :reload_interval, @reload_interval)
     }
+
+    :ets.insert(
+      ets_name(server),
+      {"tier", Keyword.get(opts, :tier, Application.get_env(:statsig_ex, :env_tier, nil))}
+    )
 
     {:ok, last_sync} = reload_configs(state.api_key, state.last_sync, server, crash)
 
@@ -160,8 +164,9 @@ defmodule StatsigEx do
   end
 
   defp get_tier(server) do
-    case state(server) do
-      %{tier: t} -> t
+    :ets.lookup(ets_name(server), "tier")
+    |> case do
+      [{"tier", t}] -> t
       _ -> nil
     end
   end
