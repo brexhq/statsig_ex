@@ -32,7 +32,7 @@ defmodule StatsigEx do
   def init(opts) do
     server = Keyword.fetch!(opts, :name)
     crash = Keyword.fetch!(opts, :crash_on_startup)
-    :ets.new(ets_name(server), [:named_table])
+    :ets.new(ets_name(server), [:named_table, read_concurrency: true])
 
     # so we can attempt to flush events before shutdown
     Process.flag(:trap_exit, true)
