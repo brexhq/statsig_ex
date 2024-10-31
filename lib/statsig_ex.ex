@@ -41,18 +41,21 @@ defmodule StatsigEx do
       api_key: get_api_key(Keyword.fetch!(opts, :api_key)),
       last_sync: 0,
       events: [],
-      tier: Keyword.get(opts, :tier, Application.get_env(:statsig_ex, :env_tier, nil)),
       prefix: server,
       flush_interval: Keyword.get(opts, :flush_interval, @flush_interval),
       reload_interval: Keyword.get(opts, :reload_interval, @reload_interval)
     }
+
+    :ets.insert(
+      ets_name(server),
+      {"tier", Keyword.get(opts, :tier, Application.get_env(:statsig_ex, :env_tier, nil))}
+    )
 
     {:ok, last_sync} = reload_configs(state.api_key, state.last_sync, server, crash)
 
     Process.send_after(self(), :reload, state.reload_interval)
     Process.send_after(self(), :flush, state.flush_interval)
     {:ok, Map.put(state, :last_sync, last_sync)}
-    # end
   end
 
   @doc """
@@ -95,6 +98,14 @@ defmodule StatsigEx do
   def state(server \\ __MODULE__), do: GenServer.call(server, :state)
 
   def lookup(name, type, server \\ __MODULE__), do: :ets.lookup(ets_name(server), {name, type})
+
+  def get_tier(server) do
+    :ets.lookup(ets_name(server), "tier")
+    |> case do
+      [{"tier", t}] -> t
+      _ -> nil
+    end
+  end
 
   def all(type, server \\ __MODULE__),
     do: :ets.match(ets_name(server), {{:"$1", type}, :_}) |> List.flatten()
@@ -156,13 +167,6 @@ defmodule StatsigEx do
           nil -> {:system, "STATSIG_API_KEY"}
           v -> v
         end
-    end
-  end
-
-  defp get_tier(server) do
-    case state(server) do
-      %{tier: t} -> t
-      _ -> nil
     end
   end
 
