@@ -56,7 +56,6 @@ defmodule StatsigEx do
     Process.send_after(self(), :reload, state.reload_interval)
     Process.send_after(self(), :flush, state.flush_interval)
     {:ok, Map.put(state, :last_sync, last_sync)}
-    # end
   end
 
   @doc """
@@ -99,6 +98,14 @@ defmodule StatsigEx do
   def state(server \\ __MODULE__), do: GenServer.call(server, :state)
 
   def lookup(name, type, server \\ __MODULE__), do: :ets.lookup(ets_name(server), {name, type})
+
+  def get_tier(server) do
+    :ets.lookup(ets_name(server), "tier")
+    |> case do
+      [{"tier", t}] -> t
+      _ -> nil
+    end
+  end
 
   def all(type, server \\ __MODULE__),
     do: :ets.match(ets_name(server), {{:"$1", type}, :_}) |> List.flatten()
@@ -160,14 +167,6 @@ defmodule StatsigEx do
           nil -> {:system, "STATSIG_API_KEY"}
           v -> v
         end
-    end
-  end
-
-  defp get_tier(server) do
-    :ets.lookup(ets_name(server), "tier")
-    |> case do
-      [{"tier", t}] -> t
-      _ -> nil
     end
   end
 
