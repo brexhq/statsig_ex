@@ -38,6 +38,17 @@ defmodule StatsigEx.TestGenerator do
                 :gate ->
                   # maybe give us some time to actually spit out logs?
                   StatsigEx.check_gate(unquote(Macro.escape(user)), unquote(name), :test)
+
+                  # spit out the test details on failures
+                  if unquote(Macro.escape(expected)) != result.result do
+                    IO.puts("failure!")
+
+                    IO.inspect(
+                      {unquote(Macro.escape(user)), unquote(name), unquote(type),
+                       unquote(Macro.escape(expected))}
+                    )
+                  end
+
                   assert unquote(Macro.escape(expected)) == result.result
 
                 _ ->
@@ -45,14 +56,6 @@ defmodule StatsigEx.TestGenerator do
               end
 
               [_ | cal_sec] = result.exposures
-
-              # spit out the test details on failures
-              # if Enum.sort(unquote(Macro.escape(secondary))) != Enum.sort(cal_sec) do
-              #   IO.inspect(
-              #     {unquote(Macro.escape(user)), unquote(name), unquote(type),
-              #      unquote(Macro.escape(secondary))}
-              #   )
-              # end
 
               assert Enum.sort(unquote(Macro.escape(secondary))) == Enum.sort(cal_sec)
             end

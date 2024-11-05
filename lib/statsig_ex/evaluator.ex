@@ -341,8 +341,12 @@ defmodule StatsigEx.Evaluator do
     end
   end
 
-  # all array comparisons require a list for both value & target
-  defp compare(val, target, <<"array_contains_", _type::binary>>)
+  # array operations must function on lists on both sides
+  defp compare(val, target, <<"array_", _type::binary>>)
+       when not is_list(val) or not is_list(target),
+       do: false
+
+  defp compare(val, target, <<"not_array_", _type::binary>>)
        when not is_list(val) or not is_list(target),
        do: false
 
@@ -358,7 +362,7 @@ defmodule StatsigEx.Evaluator do
   defp compare(val, target, "array_contains_all") do
     val_m = MapSet.new(val)
     target_m = MapSet.new(target)
-    MapSet.subset?(val_m, target_m)
+    MapSet.subset?(target_m, val_m)
   end
 
   defp compare(val, target, "not_array_contains_all"),
