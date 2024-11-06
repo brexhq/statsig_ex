@@ -3,6 +3,6 @@
 ```shell
 $ mix test
 
-Finished in 34.9 seconds
-4628 tests, 0 failures, 2 skipped
+Finished in 55.1 seconds
+5243 tests, 0 failures
 ```
